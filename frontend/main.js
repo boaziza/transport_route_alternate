@@ -20,7 +20,7 @@ async function searchRoute(from, to, profile='driving-car', preference='fastest'
 
   try {
     const q = new URLSearchParams({ from, to, profile, preference });
-    const res = await fetch(`/api/route?${q.toString()}`);
+    const res = await fetch(`https://your-app.onrender.com/api/route?${q.toString()}`);
 
     if (!res.ok) {
       const err = await res.json().catch(()=>({error:'Unknown'}));
