@@ -1,15 +1,15 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ---------- YOUR OPENROUTESERVICE KEY ----------
 const ORS_KEY = process.env.ORS_KEY;
 
-// ---------- 1. GEOCODING FUNCTION ----------
+// ---------- 1. GEOCODING ----------
 async function geocode(placeName) {
   const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(placeName)}&boundary.country=RW`;
 
@@ -24,7 +24,6 @@ async function geocode(placeName) {
   return { lat, lon };
 }
 
-// Convert two locations → ORS coordinate array
 async function geocodeToCoords(from, to) {
   const start = await geocode(from);
   const end = await geocode(to);
@@ -35,16 +34,14 @@ async function geocodeToCoords(from, to) {
   ];
 }
 
-// ---------- 2. MAIN ROUTE API ----------
+// ---------- 2. ROUTE API ----------
 app.get("/api/route", async (req, res) => {
   const { from, to, profile, preference } = req.query;
 
   try {
-    // Convert addresses → ORS coordinates
     const coords = await geocodeToCoords(from, to);
 
     const url = `https://api.openrouteservice.org/v2/directions/${profile}`;
-
     const body = {
       coordinates: coords,
       preference: preference || "fastest"
@@ -62,7 +59,6 @@ app.get("/api/route", async (req, res) => {
     const ors = await orsRes.json();
 
     if (!ors.features) {
-      console.log("ORS ERROR:", ors);
       return res.status(500).json({ error: "ORS API Error", details: ors });
     }
 
@@ -83,6 +79,13 @@ app.get("/api/route", async (req, res) => {
   }
 });
 
-// ---------- 3. DEPLOYMENT FRIENDLY ----------
+// ---------- 3. SERVE FRONTEND ----------
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+});
+
+// ---------- 4. START SERVER ----------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Backend running on port", PORT));
