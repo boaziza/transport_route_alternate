@@ -72,41 +72,43 @@ app.use((req, res, next) => {
 });
 
 // Endpoint: /api/route?from=Kigali&to=Huye&profile=driving-car&preference=fastest
-app.get('/api/route', async (req, res) => {
+app.get("/api/route", async (req, res) => {
+  const { from, to, profile, preference } = req.query;
+
   try {
-    const { from, to, profile = 'driving-car', preference = 'fastest' } = req.query;
-    if (!from || !to) return res.status(400).json({ error: 'from and to query params required' });
-
-    // geocode both
-    const start = await geocode(from);
-    const end = await geocode(to);
-
-    // directions
-    const directions = await getDirections(start, end, profile, preference);
-
-    // extract summary info for UI
-    const summary = (directions.features && directions.features[0] && directions.features[0].properties && directions.features[0].properties.summary) || null;
-    const segments = (directions.features && directions.features[0] && directions.features[0].properties && directions.features[0].properties.segments) || [];
-
-    res.json({
-      start,
-      end,
-      summary,
-      segments,
-      raw: directions
+    const orsRes = await fetch("https://api.openrouteservice.org/v2/directions/" + profile, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": process.env.ORS_KEY
+      },
+      body: JSON.stringify({
+        coordinates: await geocodeToCoords(from, to),
+        preference: preference
+      })
     });
+
+    const ors = await orsRes.json();
+
+    const feature = ors.features[0];
+
+    const output = {
+      start: { label: from },
+      end: { label: to },
+      summary: feature.properties.summary,
+      segments: feature.properties.segments,
+      geometry: feature.geometry.coordinates, // IMPORTANT!
+      raw: ors
+    };
+
+    res.json(output);
+
   } catch (err) {
-    console.error(err && err.response && err.response.data ? err.response.data : err.message);
-    // handle ORS rate limit headers if present
-    if (err.response) {
-      const status = err.response.status;
-      if (status === 429) return res.status(429).json({ error: 'OpenRouteService rate limit exceeded. Try again later.' });
-      if (status === 403) return res.status(403).json({ error: 'OpenRouteService daily quota exceeded.' });
-      return res.status(status).json({ error: err.response.data || 'ORS error' });
-    }
-    res.status(500).json({ error: err.message || 'Server error' });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // simple healthcheck for LB01
 app.get('/healthz', (req, res) => res.json({ status: 'ok' }));
