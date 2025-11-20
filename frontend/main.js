@@ -1,64 +1,98 @@
-// main.js
+// FORM + UI ELEMENTS
 const form = document.getElementById('routeForm');
 const statusEl = document.getElementById('status');
 const resultsEl = document.getElementById('results');
 const routeListEl = document.getElementById('routeList');
-const sortSelect = document.getElementById('sort');
 
+let map = L.map('map').setView([-1.95, 30.06], 8); // Rwanda default view (Kigali)
+
+// Add OpenStreetMap layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+let routeLayer = null;
+
+//-------------------- SEARCH ROUTE --------------------
 async function searchRoute(from, to, profile='driving-car', preference='fastest') {
-  setStatus('Searching...');
+  setStatus("Searching...");
   resultsEl.hidden = true;
-  routeListEl.innerHTML = '';
+
   try {
     const q = new URLSearchParams({ from, to, profile, preference });
     const res = await fetch(`/api/route?${q.toString()}`);
+
     if (!res.ok) {
       const err = await res.json().catch(()=>({error:'Unknown'}));
       throw new Error(err.error || 'Request failed');
     }
+
     const data = await res.json();
-    setStatus('Route found.');
     renderResults(data);
+    drawRouteOnMap(data);
+    setStatus("Route loaded.");
+
   } catch (err) {
-    setStatus('Error: ' + (err.message || 'Unknown error'));
+    setStatus("Error: " + err.message);
   }
 }
 
+//-------------------- STATUS --------------------
 function setStatus(text) {
   statusEl.textContent = text;
 }
 
+//-------------------- RENDER RESULTS --------------------
 function renderResults(data) {
   resultsEl.hidden = false;
   routeListEl.innerHTML = '';
-  // summary object: duration (s), distance (m)
-  const summary = data.summary || {};
-  const segments = data.segments || [];
-  // We'll create a simple display card
+
+  const summary = data.summary;
+  const segs = data.segments;
+
   const card = document.createElement('div');
   card.className = 'routeCard';
-  const durationMin = (summary.duration || 0) / 60;
-  const distanceKm = (summary.distance || 0) / 1000;
+
+  const durationMin = (summary.duration / 60).toFixed(1);
+  const distanceKm = (summary.distance / 1000).toFixed(2);
+
   card.innerHTML = `
     <strong>${data.start.label} → ${data.end.label}</strong>
-    <div class="small">Duration: ${durationMin.toFixed(1)} min | Distance: ${distanceKm.toFixed(2)} km</div>
-    <details>
-      <summary>Segments (${segments.length})</summary>
-      ${segments.map(s => `<div class="small">${s.distance} m, ${Math.round(s.duration)} s — ${s.steps ? s.steps.length+' steps' : ''}</div>`).join('')}
-    </details>
+    <div>Duration: <strong>${durationMin} min</strong></div>
+    <div>Distance: <strong>${distanceKm} km</strong></div>
   `;
+
   routeListEl.appendChild(card);
-  // raw JSON viewer (hidden by default)
-  const raw = document.getElementById('raw');
-  raw.textContent = JSON.stringify(data.raw, null, 2);
 }
 
-form.addEventListener('submit', (e) => {
+//-------------------- MAP DRAWING --------------------
+function drawRouteOnMap(data) {
+  if (routeLayer) {
+    map.removeLayer(routeLayer);
+  }
+
+  const coords = data.geometry; // [[lon, lat], ...]
+
+  // Convert to Leaflet format [lat, lon]
+  const latLngs = coords.map(c => [c[1], c[0]]);
+
+  routeLayer = L.polyline(latLngs, {
+    weight: 5
+  }).addTo(map);
+
+  map.fitBounds(routeLayer.getBounds());
+}
+
+//-------------------- FORM SUBMIT --------------------
+form.addEventListener('submit', e => {
   e.preventDefault();
+
   const from = document.getElementById('from').value.trim();
   const to = document.getElementById('to').value.trim();
   const profile = document.getElementById('profile').value;
   const preference = document.getElementById('preference').value;
-  if (!from || !to) return setStatus('Please fill from and to');
+
+  if (!from || !to) return setStatus("Please enter both locations.");
+
   searchRoute(from, to, profile, preference);
 });
