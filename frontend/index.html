@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Rwanda Route Planner</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Rwanda Transport Route Planner</h1>
+    <form id="routeForm">
+      <label>From: <input type="text" id="from" placeholder="e.g., Kigali, Rwanda" required value="Kigali"/></label>
+      <label>To: <input type="text" id="to" placeholder="e.g., Huye, Rwanda" required value="Huye"/></label>
+      <label>Mode:
+        <select id="profile">
+          <option value="driving-car">Car</option>
+          <option value="foot-walking">Walking</option>
+          <option value="cycling-regular">Cycling</option>
+        </select>
+      </label>
+      <label>Preference:
+        <select id="preference">
+          <option value="fastest">Fastest</option>
+          <option value="shortest">Shortest</option>
+        </select>
+      </label>
+      <button type="submit">Find Route</button>
+    </form>
+
+    <section id="status"></section>
+
+    <section id="results" hidden>
+      <h2>Routes</h2>
+      <div class="controls">
+        <label>Sort by:
+          <select id="sort">
+            <option value="duration">Duration</option>
+            <option value="distance">Distance</option>
+          </select>
+        </label>
+      </div>
+      <div id="routeList"></div>
+      <pre id="raw" style="display:none"></pre>
+    </section>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>
