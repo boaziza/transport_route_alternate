@@ -11,12 +11,13 @@ const ORS_KEY = process.env.ORS_KEY;
 
 // ---------- 1. GEOCODING ----------
 async function geocode(placeName) {
-  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(placeName)}&boundary.country=RW`;
+  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(placeName)}, Rwanda`;
 
   const res = await fetch(url);
   const data = await res.json();
 
   if (!data.features || data.features.length === 0) {
+    console.log("Geocode API result:", data);
     throw new Error("Could not find location: " + placeName);
   }
 
