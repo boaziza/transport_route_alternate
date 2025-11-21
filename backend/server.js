@@ -2,16 +2,17 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const polyline = require('@mapbox/polyline');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const ORS_KEY = process.env.ORS_KEY;
+const ORS_API_KEY = process.env.ORS_API_KEY;
 
 // ---------- 1. GEOCODING ----------
 async function geocode(placeName) {
-  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(placeName)}, Rwanda`;
+  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(placeName)}, Rwanda`;
 
   const res = await fetch(url);
   const data = await res.json();
@@ -45,13 +46,13 @@ app.get("/api/route", async (req, res) => {
     const url = `https://api.openrouteservice.org/v2/directions/${profile}`;
     const body = {
       coordinates: coords,
-      preference: preference || "fastest"
+      preference: preference || "recommended"
     };
 
     const orsRes = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": ORS_KEY,
+        "Authorization": ORS_API_KEY,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(body)
@@ -59,23 +60,27 @@ app.get("/api/route", async (req, res) => {
 
     const ors = await orsRes.json();
 
-    if (!ors.features) {
+    if (!ors.routes || ors.routes.length === 0) {
       return res.status(500).json({ error: "ORS API Error", details: ors });
     }
 
-    const feature = ors.features[0];
+    const route = ors.routes[0];
+    
+    // DECODE THE GEOMETRY HERE
+    const decodedGeometry = polyline.decode(route.geometry); // Returns [[lat, lon], ...]
+    const coordinates = decodedGeometry.map(coord => [coord[1], coord[0]]); // Convert to [lon, lat]
 
     return res.json({
       start: { label: from },
       end: { label: to },
-      summary: feature.properties.summary,
-      segments: feature.properties.segments,
-      geometry: feature.geometry.coordinates,
+      summary: route.summary,
+      segments: route.segments,
+      geometry: coordinates, // Now it's an array of [lon, lat]
       raw: ors
     });
 
   } catch (err) {
-    console.error(err);
+    console.error('Server Error:', err);
     return res.status(500).json({ error: "Server error", details: err.message });
   }
 });

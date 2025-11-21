@@ -20,14 +20,15 @@ async function searchRoute(from, to, profile='driving-car', preference='fastest'
 
   try {
     const q = new URLSearchParams({ from, to, profile, preference });
-    const res = await fetch(`/api/route?${q.toString()}`);
+    const res = await fetch(`http://localhost:3000/api/route?${q.toString()}`);
+    console.log("Data",res);
 
     if (!res.ok) {
       const err = await res.json().catch(()=>({error:'Unknown'}));
       throw new Error(err.error || 'Request failed');
     }
 
-    const data = await res.json();
+    const data = await res.json();    
     renderResults(data);
     drawRouteOnMap(data);
     setStatus("Route loaded.");
@@ -89,8 +90,12 @@ form.addEventListener('submit', e => {
 
   const from = document.getElementById('from').value.trim();
   const to = document.getElementById('to').value.trim();
-  const profile = document.getElementById('profile').value;
+  const profile = document.getElementById('profile').value || `driving-car`;
   const preference = document.getElementById('preference').value;
+
+  console.log('Profile value:', profile);
+  console.log('Profile type:', typeof profile);
+  console.log('Full params:', { from, to, profile, preference });
 
   if (!from || !to) return setStatus("Please enter both locations.");
 
