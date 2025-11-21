@@ -20,7 +20,7 @@ async function searchRoute(from, to, profile='driving-car', preference='fastest'
 
   try {
     const q = new URLSearchParams({ from, to, profile, preference });
-    const res = await fetch(`http://localhost:3000/api/route?${q.toString()}`);
+    const res = await fetch(`https://transport-route-alternate-backend.onrender.com/api/route?${q.toString()}`);
     console.log("Data",res);
 
     if (!res.ok) {
