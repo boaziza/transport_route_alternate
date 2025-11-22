@@ -55,6 +55,15 @@
         <h2>Route Summary</h2>
         <div id="routeList"></div>
       </section>
+      <div class="card">
+        <h2>🔍 Search Location</h2>
+        <div class="input-group">
+          <label>Search:</label>
+          <input type="text" id="geocodeQuery" placeholder="Enter location name">
+        </div>
+        <button onclick="geocodeSearch()">Search</button>
+        <div id="geocodeResult" class="result" style="display:none;"></div>
+      </div>
     </section>
 
     <!-- RIGHT PANEL: MAP -->

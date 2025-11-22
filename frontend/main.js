@@ -20,7 +20,7 @@ async function searchRoute(from, to, profile='driving-car', preference='fastest'
 
   try {
     const q = new URLSearchParams({ from, to, profile, preference });
-    const res = await fetch(`https://transport-route-alternate-backend.onrender.com/api/route?${q.toString()}`);
+    const res = await fetch(`http://localhost:3000/api/route?${q.toString()}`);
     console.log("Data",res);
 
     if (!res.ok) {
@@ -82,6 +82,34 @@ function drawRouteOnMap(data) {
   }).addTo(map);
 
   map.fitBounds(routeLayer.getBounds());
+}
+
+async function geocodeSearch() {
+  const query = document.getElementById('geocodeQuery').value;
+  console.log(query);
+  
+  const resultDiv = document.getElementById('geocodeResult');
+  
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<p class="loading">Searching...</p>';
+  
+  try {
+    const response = await fetch(`http://localhost:3000/api/geocode/search?query=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    console.log("Data",data);
+    
+    
+    if (data.success) {
+      resultDiv.innerHTML = `
+        <p class="success">✅ Found ${data.results.length} results</p>
+        <pre>${JSON.stringify(data.results, null, 2)}</pre>
+      `;
+    } else {
+      resultDiv.innerHTML = `<p class="error">❌ ${data.error}</p>`;
+    }
+  } catch (error) {
+    resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+  }
 }
 
 //-------------------- FORM SUBMIT --------------------

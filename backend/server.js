@@ -7,6 +7,7 @@ const polyline = require('@mapbox/polyline');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static('frontend'));
 
 const ORS_API_KEY = process.env.ORS_API_KEY;
 
@@ -35,6 +36,47 @@ async function geocodeToCoords(from, to) {
     [end.lon, end.lat]
   ];
 }
+
+// ---------- 2. GEOCODING SEARCH ----------
+app.get('/api/geocode/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ success: false, error: "Missing ?query=" });
+    }
+
+    const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(query)}&size=5`;
+
+    const orsRes = await fetch(url);
+    const data = await orsRes.json();
+
+    if (!data.features) {
+      return res.status(500).json({
+        success: false,
+        error: "ORS geocoding error",
+        details: data
+      });
+    }
+
+    const results = data.features.map(f => ({
+      name: f.properties.label,
+      coordinates: f.geometry.coordinates,   // [lon, lat]
+      country: f.properties.country,
+      region: f.properties.region
+    }));
+
+    res.json({
+      success: true,
+      results
+    });
+
+  } catch (error) {
+    console.error("Geocode search error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 // ---------- 2. ROUTE API ----------
 app.get("/api/route", async (req, res) => {
