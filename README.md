@@ -527,10 +527,9 @@ app.use(cors());
 **Current Status:** 
 - Documented issue with evidence
 - Proceeded with Web02 deployment
-- Awaiting resolution from instructor
+- Awaiting resolution from facilitator
 
 **Impact:** 
-- Single point of failure (no redundancy)
 - Unable to fully demonstrate load balancing capabilities
 - 50% of intended server deployment incomplete
 
@@ -559,9 +558,9 @@ app.use(cors());
   © HeiGIT at Heidelberg University
 
 ### Libraries & Frameworks
-- **Express.js:**
+- **Express.js:** Backend framework - https://expressjs.com/
+- **Axios:** HTTP client - https://axios-http.com/
 - **Leaflet.js:** Interactive maps - https://leafletjs.com/
-- **Axios:**
 - **PM2:** Process manager - https://pm2.keymetrics.io/
 
 ### Resources
