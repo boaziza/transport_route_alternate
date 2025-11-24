@@ -9,14 +9,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('frontend'));
 
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Server: ${process.env.SERVER_NAME || 'unknown'}`);
-  next();
-});
-
 const ORS_API_KEY = process.env.ORS_API_KEY;
 
-// ---------- 1. GEOCODING ----------
 async function geocode(placeName) {
   const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(placeName)}, Rwanda`;
 
@@ -42,7 +36,6 @@ async function geocodeToCoords(from, to) {
   ];
 }
 
-// ---------- 2. GEOCODING SEARCH ----------
 app.get('/api/geocode/search', async (req, res) => {
   try {
     const { query } = req.query;
@@ -51,7 +44,7 @@ app.get('/api/geocode/search', async (req, res) => {
       return res.status(400).json({ success: false, error: "Missing ?query=" });
     }
 
-    const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(query)}&size=5`;
+    const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(query)}&size=5&boundary.country=RW`;
 
     const orsRes = await fetch(url);
     const data = await orsRes.json();
@@ -66,7 +59,7 @@ app.get('/api/geocode/search', async (req, res) => {
 
     const results = data.features.map(f => ({
       name: f.properties.label,
-      coordinates: f.geometry.coordinates,   // [lon, lat]
+      coordinates: f.geometry.coordinates,
       country: f.properties.country,
       region: f.properties.region
     }));
@@ -83,12 +76,33 @@ app.get('/api/geocode/search', async (req, res) => {
 });
 
 
-// ---------- 2. ROUTE API ----------
 app.get("/api/route", async (req, res) => {
-  const { from, to, profile, preference } = req.query;
+  const { from, to, profile, preference, fromLon, fromLat, toLon, toLat, fromName, toName } = req.query;
 
   try {
-    const coords = await geocodeToCoords(from, to);
+    let coords;
+    let startLabel, endLabel;
+
+    if (fromLon && fromLat && toLon && toLat) {
+      coords = [
+        [parseFloat(fromLon), parseFloat(fromLat)],
+        [parseFloat(toLon), parseFloat(toLat)]
+      ];
+      startLabel = fromName || 'Start Location';
+      endLabel = toName || 'End Location';
+      console.log('Using direct coordinates:', coords);
+    } 
+
+    else if (from && to) {
+      coords = await geocodeToCoords(from, to);
+      startLabel = from;
+      endLabel = to;
+    } 
+    else {
+      return res.status(400).json({ 
+        error: "Missing from, to locations" 
+      });
+    }
 
     const url = `https://api.openrouteservice.org/v2/directions/${profile}`;
     const body = {
@@ -108,21 +122,21 @@ app.get("/api/route", async (req, res) => {
     const ors = await orsRes.json();
 
     if (!ors.routes || ors.routes.length === 0) {
-      return res.status(500).json({ error: "ORS API Error", details: ors });
+      console.error('API Error:', ors);
+      return res.status(500).json({ error: "API Error", details: ors });
     }
 
     const route = ors.routes[0];
     
-    // DECODE THE GEOMETRY HERE
     const decodedGeometry = polyline.decode(route.geometry); // Returns [[lat, lon], ...]
     const coordinates = decodedGeometry.map(coord => [coord[1], coord[0]]); // Convert to [lon, lat]
 
     return res.json({
-      start: { label: from },
-      end: { label: to },
+      start: {label: startLabel},
+      end: {label: endLabel},
       summary: route.summary,
       segments: route.segments,
-      geometry: coordinates, // Now it's an array of [lon, lat]
+      geometry: coordinates,
       raw: ors
     });
 
@@ -132,39 +146,11 @@ app.get("/api/route", async (req, res) => {
   }
 });
 
-app.get('/api/quota', (req, res) => {
-  try {
-    res.json({
-      success: true,
-      message: 'Server is running',
-      server: process.env.SERVER_NAME || 'unknown',
-      timestamp: new Date().toISOString(),
-      endpoints: {
-        directions: '1991/2000',
-        geocode: '989/1000',
-        isochrones: '500/500',
-        matrix: '500/500',
-        elevation: '2000/2000',
-        pois: '500/500',
-        optimization: '500/500'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
-});
-
-
-// ---------- 3. SERVE FRONTEND ----------
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
-// ---------- 4. START SERVER ----------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Backend running on port", PORT));
