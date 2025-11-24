@@ -52,7 +52,7 @@ async function performGeocodeSearch(query, resultsDiv, inputEl, selectionType) {
   resultsDiv.innerHTML = '<div class="geocode-loading">Searching...</div>';
   
   try {
-    const response = await fetch(`http://localhost:3000/api/geocode/search?query=${encodeURIComponent(query)}`);
+    const response = await fetch(`http://3.87.59.198/api/geocode/search?query=${encodeURIComponent(query)}`);
     const data = await response.json();
     
     if (data.success && data.results.length > 0) {
@@ -165,7 +165,7 @@ async function searchRoute(profile='driving-car', preference='fastest') {
       preference: preference
     });
     
-    const res = await fetch(`http://localhost:3000/api/route?${params.toString()}`);
+    const res = await fetch(`http://3.87.59.198/api/route?${params.toString()}`);
     console.log("Route response:", res);
 
     if (!res.ok) {
