@@ -5,75 +5,75 @@
   <title>Rwanda Route Planner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Leaflet Map CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-  <header>
-    <h1>Rwanda Transport Route Planner</h1>
+  <header> 
+    <h1>🗺️ Rwanda Transport Route Planner</h1>
   </header>
 
   <main class="layout">
 
-    <!-- LEFT PANEL: FORM + RESULTS -->
     <section class="sidebar">
-      <form id="routeForm" class="card">
-        <h2>Plan a Trip</h2>
 
-        <label>From:
-          <input type="text" id="from" placeholder="e.g., Kigali" value="Kigali" required>
-        </label>
+      <form id="routeForm">
+        <div class="inputGroup input-wrapper">
+          <label for="from">📍 From:</label>
+          <input type="text" id="from" placeholder="Type location (e.g., Kimironko)" autocomplete="off" required/>
+          <div id="fromResults" class="geocode-results"></div>
+        </div>
 
-        <label>To:
-          <input type="text" id="to" placeholder="e.g., Huye" value="Huye" required>
-        </label>
+        <div class="inputGroup input-wrapper">
+          <label for="to">📍 To:</label>
+          <input type="text" id="to" placeholder="Type destination (e.g., Zindiro)" autocomplete="off" required/>
+          <div id="toResults" class="geocode-results"></div>
+        </div>
 
-        <label>Transport Mode:
-          <select id="profile">
-            <option value="driving-car">Car</option>
-            <option value="foot-walking">Walking</option>
+        <div class="inputGroup">
+          <label for="profile">Profile:</label>
+          <select id="profile" required>
+            <option value="driving-car">Driving Car</option>
+            <option value="driving-hgv">Driving Truck</option>
             <option value="cycling-regular">Cycling</option>
+            <option value="foot-walking">Walking</option>
           </select>
-        </label>
+        </div>
 
-        <label>Preference:
-          <select id="preference">
+        <div class="inputGroup">
+          <label for="preference">Preference:</label>
+          <select id="preference" required>
             <option value="fastest">Fastest</option>
             <option value="shortest">Shortest</option>
+            <option value="recommended">Recommended</option>
           </select>
-        </label>
+        </div>
 
-        <button type="submit" class="btn">Find Route</button>
+        <button type="submit" class="searchBtn">Search Route</button>
+        
+        <div id="status" class="status-message">
+          Enter locations to search for routes
+        </div>
       </form>
 
-      <p id="status"></p>
-
-      <section id="results" hidden class="card">
-        <h2>Route Summary</h2>
+      <div id="results" hidden>
+        <h3>Route Details</h3>
         <div id="routeList"></div>
-      </section>
-      <div class="card">
-        <h2>🔍 Search Location</h2>
-        <div class="input-group">
-          <label>Search:</label>
-          <input type="text" id="geocodeQuery" placeholder="Enter location name">
-        </div>
-        <button onclick="geocodeSearch()">Search</button>
-        <div id="geocodeResult" class="result" style="display:none;"></div>
       </div>
+
     </section>
 
-    <!-- RIGHT PANEL: MAP -->
     <section class="map-section">
       <div id="map"></div>
     </section>
 
   </main>
 
-  <!-- Leaflet Map JS -->
+  <footer>
+    <p>Powered by OpenRouteService API</p>
+  </footer>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="main.js"></script>
 </body>
