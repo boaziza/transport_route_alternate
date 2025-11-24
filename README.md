@@ -62,7 +62,7 @@ A web-based route planning application specifically designed for Rwanda's transp
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 ```javascript
@@ -128,7 +128,7 @@ A web-based route planning application specifically designed for Rwanda's transp
 
 ---
 
-## 💻 Local Setup
+## Local Setup
 
 ### Prerequisites
 ```bash
@@ -183,7 +183,7 @@ node server.js
 
 ---
 
-## 🚀 Deployment Guide
+## Deployment Guide
 
 ### Architecture Overview
 ```
@@ -535,7 +535,7 @@ app.use(cors());
 
 ---
 
-## 📚 What I Learned
+## What I Learned
 
 ### Technical Skills
 1. **API Integration:** Understanding rate limits, authentication, and data format handling
@@ -573,11 +573,11 @@ app.use(cors());
 ## Repository & Video
 
 **GitHub Repository:** https://github.com/boaziza/transport_route_alternate  
-**Demo Video:** [Your Video Link Here]
+**Demo Video:** https://youtu.be/sjX5fqQWErQ
 
 ---
 
-## 📄 License
+## License
 
 This project is created for educational purposes as part of [Course Name].  
 All API usage complies with respective terms of service.
