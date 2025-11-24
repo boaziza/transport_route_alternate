@@ -20,7 +20,7 @@ async function searchRoute(from, to, profile='driving-car', preference='fastest'
 
   try {
     const q = new URLSearchParams({ from, to, profile, preference });
-    const res = await fetch(`http://localhost:3000/api/route?${q.toString()}`);
+    const res = await fetch(`http://3.87.59.198/api/route?${q.toString()}`);
     console.log("Data",res);
 
     if (!res.ok) {
@@ -94,7 +94,7 @@ async function geocodeSearch() {
   resultDiv.innerHTML = '<p class="loading">Searching...</p>';
   
   try {
-    const response = await fetch(`http://localhost:3000/api/geocode/search?query=${encodeURIComponent(query)}`);
+    const response = await fetch(`http://3.87.59.198/api/geocode/search?query=${encodeURIComponent(query)}`);
     const data = await response.json();
     console.log("Data",data);
     

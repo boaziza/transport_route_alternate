@@ -9,6 +9,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('frontend'));
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Server: ${process.env.SERVER_NAME || 'unknown'}`);
+  next();
+});
+
 const ORS_API_KEY = process.env.ORS_API_KEY;
 
 // ---------- 1. GEOCODING ----------
@@ -126,6 +131,32 @@ app.get("/api/route", async (req, res) => {
     return res.status(500).json({ error: "Server error", details: err.message });
   }
 });
+
+app.get('/api/quota', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Server is running',
+      server: process.env.SERVER_NAME || 'unknown',
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        directions: '1991/2000',
+        geocode: '989/1000',
+        isochrones: '500/500',
+        matrix: '500/500',
+        elevation: '2000/2000',
+        pois: '500/500',
+        optimization: '500/500'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 
 // ---------- 3. SERVE FRONTEND ----------
 app.use(express.static(path.join(__dirname, "../frontend")));
